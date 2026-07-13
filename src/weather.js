@@ -1,25 +1,27 @@
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import LightModeIcon from "@mui/icons-material/LightMode";
 import CloudIcon from "@mui/icons-material/Cloud";
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 
 export default function Weather() {
-  const [temp, setTemp] = useState({
-    normal: 0,
+  const [weather, setWeather] = useState({
+    temp: 0,
     max: 0,
     min: 0,
     icon: null,
     date: null,
+    city: "القاهرة",
+    description: "استعدادات الطقس",
+    humidity: 0,
+    wind: 0,
+    pressure: 0,
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios
@@ -27,163 +29,203 @@ export default function Weather() {
         "https://api.openweathermap.org/data/2.5/weather?lat=30.04442&lon=31.23571&appid=f6ce42b1894c198c8c63f27620777f6c",
       )
       .then(function (response) {
-        const tempR = Math.round(response.data.main.temp - 272.15);
-        const tempMaxR = Math.round(response.data.main.temp_max - 272.15);
-        const tempMinR = Math.round(response.data.main.temp_min - 272.15);
-        const icon = response.data.weather[0].icon;
-
+        const data = response.data;
+        const tempR = Math.round(data.main.temp - 273.15);
+        const tempMaxR = Math.round(data.main.temp_max - 273.15);
+        const tempMinR = Math.round(data.main.temp_min - 273.15);
+        const icon = data.weather?.[0]?.icon;
         const day = new Date().getDate();
         const month = new Date().getMonth() + 1;
 
-        console.log(month);
-        console.log(day);
-        console.log(response);
-
-        console.log(response.data.main);
-        setTemp({
-          normal: tempR,
+        setWeather({
+          temp: tempR,
           max: tempMaxR,
           min: tempMinR,
-          date: month + "/" + day,
-          icon: `https://openweathermap.org/img/wn/${icon}@2x.png`,
+          date: `${month}/${day}`,
+          icon: icon
+            ? `https://openweathermap.org/img/wn/${icon}@2x.png`
+            : null,
+          city: data.name || "القاهرة",
+          description: data.weather?.[0]?.description || "طقس متوازن",
+          humidity: data.main?.humidity ?? 0,
+          wind: Math.round(data.wind?.speed ?? 0),
+          pressure: data.main?.pressure ?? 0,
         });
       })
       .catch(function (error) {
         console.log(error);
       })
-      .finally(function () {});
+      .finally(function () {
+        setLoading(false);
+      });
   }, []);
+
+  const statBoxStyle = {
+    flex: 1,
+    background: "rgba(255,255,255,0.16)",
+    borderRadius: 2,
+    padding: "12px 14px",
+    textAlign: "center",
+    minHeight: 72,
+  };
+
   return (
-    <div style={{ width: "50%", height: "70%" }}>
+    <Box sx={{ width: "100%", maxWidth: 560, mx: "auto" }}>
       <Card
-        style={{
-          width: "100%",
-          height: "100%",
-          boxShadow: "0px 5px 1px rgba(0, 0, 0, 0.3)",
+        sx={{
+          borderRadius: 4,
+          overflow: "hidden",
+          boxShadow: "0 18px 45px rgba(15, 76, 129, 0.18)",
+          background: "linear-gradient(135deg, #f7fbff 0%, #eef6ff 100%)",
         }}
       >
-        <CardContent>
-          <div
-            style={{
-              background: "#0d47a1",
-              width: "100%",
-              height: "320px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "flex-start",
-              boxShadow: "0px 5px 1px rgba(0, 0, 0, 0.3)",
-            }}
+        <Box
+          sx={{
+            background:
+              "linear-gradient(135deg, #0f4c81 0%, #1e88e5 50%, #42a5f5 100%)",
+            color: "white",
+            p: { xs: 3, md: 4 },
+          }}
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            spacing={2}
           >
-            <div
-              style={{
-                background: "#1976d2",
-                width: "100%",
-                height: "100%",
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ letterSpacing: 1.6, opacity: 0.88 }}
+              >
+                توقعات الطقس
+              </Typography>
+              <Typography
+                variant="h2"
+                sx={{ fontWeight: 700, lineHeight: 1.1, my: 1 }}
+              >
+                {loading ? "--" : `${weather.temp}°C`}
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                {weather.city}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{ opacity: 0.92, textTransform: "capitalize" }}
+              >
+                {weather.description}
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
                 display: "flex",
-                justifyContent: "flex-end",
+                flexDirection: "column",
                 alignItems: "center",
-                padding: "10px",
+                justifyContent: "center",
+                minWidth: 140,
               }}
             >
-              <div
-                style={{
-                  width: "50%",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-start",
-                  alignItems: "center",
+              {weather.icon ? (
+                <img
+                  src={weather.icon}
+                  alt="Weather icon"
+                  style={{ width: 96, height: 96 }}
+                />
+              ) : (
+                <CloudIcon sx={{ fontSize: 96, opacity: 0.95 }} />
+              )}
+              <Chip
+                label={loading ? "جاري التحميل..." : weather.date}
+                sx={{
+                  mt: 1.2,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  color: "white",
+                  fontWeight: 600,
                 }}
-              >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "50%",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    fontSize: "50px",
-                    color: "white",
-                  }}
-                >
-                  <h1>{temp.normal}°C</h1>
-                </div>
-                <div
-                  style={{
-                    width: "100%",
-                    height: "30%",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    color: "white",
-                  }}
-                >
-                  <h1>القاهرة</h1>
-                  <img
-                    src={temp.icon}
-                    alt="Weather Icon"
-                    style={{ width: "70px" }}
-                  />
-                </div>
-              </div>
-              <div
-                style={{
-                  width: "50%",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {" "}
-                <CloudIcon style={{ color: "white", fontSize: "200px" }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", width: "100%", height: "100%" }}>
-              <div
-                style={{
-                  width: "50%",
-                  height: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: "25px",
-                    textAlign: "center",
-                  }}
-                >
-                  الصغرى {temp.min}° - العظمى {temp.max}°
-                </p>
-              </div>
-              <div
-                style={{
-                  width: "50%",
-                  height: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: "25px",
-                    textAlign: "center",
-                  }}
-                >
-                  {temp.date}
-                </p>
-              </div>
-            </div>
-          </div>
+              />
+            </Box>
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ mt: 3 }}
+          >
+            <Box sx={statBoxStyle}>
+              <Typography variant="body2" sx={{ opacity: 0.82 }}>
+                الصغرى
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {loading ? "--" : `${weather.min}°`}
+              </Typography>
+            </Box>
+            <Box sx={statBoxStyle}>
+              <Typography variant="body2" sx={{ opacity: 0.82 }}>
+                العظمى
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {loading ? "--" : `${weather.max}°`}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
+        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <Box
+              sx={{
+                flex: 1,
+                background: "#f5f9ff",
+                borderRadius: 3,
+                p: 2,
+                textAlign: "center",
+                border: "1px solid #dce9f9",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                الرطوبة
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5 }}>
+                {loading ? "--" : `${weather.humidity}%`}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                flex: 1,
+                background: "#f5f9ff",
+                borderRadius: 3,
+                p: 2,
+                textAlign: "center",
+                border: "1px solid #dce9f9",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                الرياح
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5 }}>
+                {loading ? "--" : `${weather.wind} م/ث`}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                flex: 1,
+                background: "#f5f9ff",
+                borderRadius: 3,
+                p: 2,
+                textAlign: "center",
+                border: "1px solid #dce9f9",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                الضغط
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.5 }}>
+                {loading ? "--" : `${weather.pressure} hPa`}
+              </Typography>
+            </Box>
+          </Stack>
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 }

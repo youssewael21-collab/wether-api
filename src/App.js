@@ -1,23 +1,24 @@
-import logo from "./logo.svg";
-import "./App.css";
-import Add from "./add";
+import Box from "@mui/material/Box";
 import Weather from "./weather";
 
 function App() {
   return (
-    <div
-    dir="rtlؤم"
-      style={{
-        background: "#0d47a1",
-        width: "100vw",
-        height: "100vh",
+    <Box
+      dir="rtl"
+      sx={{
+        minHeight: "100vh",
+        width: "100%",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        px: { xs: 2, md: 4 },
+        py: { xs: 3, md: 5 },
+        background:
+          "radial-gradient(circle at top, #eaf5ff 0%, #b8dfff 30%, #0f4c81 100%)",
       }}
     >
       <Weather />
-    </div>
+    </Box>
   );
 }
 
